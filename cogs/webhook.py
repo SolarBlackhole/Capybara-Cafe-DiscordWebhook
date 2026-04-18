@@ -1,6 +1,6 @@
 from asyncio import tasks
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from aiohttp import web
 from dotenv import load_dotenv
 import os
@@ -54,7 +54,7 @@ class Webhook(commands.Cog):
 
             self.bot.loop.create_task(self.process_event(event_type, content, timestamp))
 
-            if event_type == "heartbeat":
+            if event_type == "Heartbeat":
                 await self.update_presence(content)
 
             return web.Response(text="OK", status=200)
@@ -283,3 +283,6 @@ class Webhook(commands.Cog):
         # <t:UNIXTIMESTAMP:F> for full date and time
         dt = datetime.datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
         return f"<t:{int(dt.timestamp())}:F>"
+
+async def setup(bot):
+    await bot.add_cog(Webhook(bot))
