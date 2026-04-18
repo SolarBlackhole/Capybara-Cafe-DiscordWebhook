@@ -38,7 +38,7 @@ class Webhook(commands.Cog):
 
     @tasks.loop(seconds=10)
     async def status_monitor(self):
-        if time.time() - self.last_heartbeat > self.server_offline_threshold:
+        if time.time() - self.last_heartbeat > 45:
             # Send server offline message to both channels
             await self.bot.change_presence(
                 status = discord.Status.dnd,
@@ -52,6 +52,8 @@ class Webhook(commands.Cog):
             timestamp = data.get("timestamp")
             content = data.get("content")
 
+            self.last_heartbeat = time.time()
+
             self.bot.loop.create_task(self.process_event(event_type, content, timestamp))
 
             if event_type == "Heartbeat":
@@ -63,7 +65,9 @@ class Webhook(commands.Cog):
             return web.Response(text="Error processing webhook", status=500)
         
     async def update_presence(self, content):
+        # Count is off by one
         count = content.get("PlayerCount", 0)
+        count = count - 1
 
         if count == 25:
             await self.bot.change_presence(
@@ -103,7 +107,7 @@ class Webhook(commands.Cog):
                     description=f"**{content['PlayerName']}** joined the server.",
                     color=discord.Color.green(),
                 )
-                embed.set_footer(text=f"ID: {content['PlayerId']} | Count: {content['PlayerCount']} | Time: {timestamp}")
+                embed.set_footer(text=f"ID: {content['PlayerId']} | Count: {content['PlayerCount'] - 1} | Time: {timestamp}")
                 self.update_presence(content)
             case "PlayerLeft":
                 embed = discord.Embed(
@@ -111,7 +115,7 @@ class Webhook(commands.Cog):
                     description=f"**{content['PlayerName']}** left the server.",
                     color=discord.Color.red(),
                 )
-                embed.set_footer(text=f"ID: {content['PlayerId']} | Count: {content['PlayerCount']} | Time: {timestamp}")
+                embed.set_footer(text=f"ID: {content['PlayerId']} | Count: {content['PlayerCount'] - 1} | Time: {timestamp}")
                 self.update_presence(content)
             case "PlayerDied":
                 embed = discord.Embed(
