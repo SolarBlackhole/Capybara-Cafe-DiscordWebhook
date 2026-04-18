@@ -283,6 +283,22 @@ class Webhook(commands.Cog):
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
                 embed.set_footer(text=f"Player ID: {content['PlayerId']} | Staff ID: {content['IssuerId']}")
+            case "PlayerReportedCheater":
+                embed = discord.Embed(
+                    title="Player Reported for Cheating",
+                    description=f"**{content['ReporterName']}** reported **{content['ReportedName']}** for cheating. Reason: {content['Reasoning']}.",
+                    color=discord.Color.red(),
+                )
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"Reporter ID: {content['ReporterId']} | Reported ID: {content['ReportedId']}")
+            case "PlayerReportedPlayer":
+                embed = discord.Embed(
+                    title="Player Reported for Abuse",
+                    description=f"**{content['ReporterName']}** reported **{content['ReportedName']}**. Reason: {content['Reasoning']}.",
+                    color=discord.Color.red(),
+                )
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"Reporter ID: {content['ReporterId']} | Reported ID: {content['ReportedId']}")
             case "heartbeat":
                 return
             case _:
