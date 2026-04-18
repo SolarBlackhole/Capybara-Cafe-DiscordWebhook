@@ -49,12 +49,11 @@ class Webhook(commands.Cog):
         try:
             data = await request.json()
             event_type = data.get("type")
-            timestamp = data.get("timestamp")
             content = data.get("content")
 
             self.last_heartbeat = time.time()
 
-            self.bot.loop.create_task(self.process_event(event_type, content, timestamp))
+            self.bot.loop.create_task(self.process_event(event_type, content, time.time()))
 
             if event_type == "Heartbeat":
                 await self.update_presence(content)
@@ -87,10 +86,10 @@ class Webhook(commands.Cog):
             )
         elif count == 0:
             await self.bot.change_presence(
-                status = discord.Status.dnd,
+                status = discord.Status.idle,
                 activity = discord.Activity(
                     type=discord.ActivityType.watching,
-                    name="the empty cafe"
+                    name="Watching the empty cafe"
                 )
             )
 
@@ -107,7 +106,8 @@ class Webhook(commands.Cog):
                     description=f"**{content['PlayerName']}** joined the server.",
                     color=discord.Color.green(),
                 )
-                embed.set_footer(text=f"ID: {content['PlayerId']} | Count: {content['PlayerCount'] - 1} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"ID: {content['PlayerId']} | Count: {content['PlayerCount'] - 1}")
                 self.update_presence(content)
             case "PlayerLeft":
                 embed = discord.Embed(
@@ -115,7 +115,8 @@ class Webhook(commands.Cog):
                     description=f"**{content['PlayerName']}** left the server.",
                     color=discord.Color.red(),
                 )
-                embed.set_footer(text=f"ID: {content['PlayerId']} | Count: {content['PlayerCount'] - 1} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"ID: {content['PlayerId']} | Count: {content['PlayerCount'] - 1}")
                 self.update_presence(content)
             case "PlayerDied":
                 embed = discord.Embed(
@@ -123,20 +124,23 @@ class Webhook(commands.Cog):
                     description=f"**{content['PlayerName']}** died. Role: {content['Role']}",
                     color=discord.Color.grey(),
                 )
-                embed.set_footer(text=f"ID: {content['PlayerId']} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"ID: {content['PlayerId']}")
             case "PlayerKilled":
                 embed = discord.Embed(
                     title="Player Killed",
                     description=f"**{content['AttackerName']}** as a **{content['AttackerRole']}** killed **{content['VictimName']}** who was a **{content['VictimRole']}**.",
                     color=discord.Color.dark_red(),
                 )
-                embed.set_footer(text=f"IDs: Attacker {content['AttackerId']}, Victim {content['VictimId']} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"IDs: Attacker {content['AttackerId']}, Victim {content['VictimId']}")
             case "ServerWaveRespawned":
                 embed = discord.Embed(
                     title="Wave Respawned",
                     description=f"A {content['Faction']} wave has respawned with {content['PlayersRespawned']} players.",
                     color=discord.Color.blue(),
                 )
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
                 embed.set_footer(text=f"Time: {timestamp}")
             case "PlayerEscaped":
                 embed = discord.Embed(
@@ -144,14 +148,16 @@ class Webhook(commands.Cog):
                     description=f"**{content['PlayerName']}** escaped the facility as a **{content['Role']}**.",
                     color=discord.Color.orange(),
                 )
-                embed.set_footer(text=f"ID: {content['PlayerId']} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"ID: {content['PlayerId']}")
             case "AdminChatMessage":
                 embed = discord.Embed(
                     title="Admin Chat Message",
                     description=f"**{content['SenderName']}**: {content['Message']}",
                     color=discord.Color.purple(),
                 )
-                embed.set_footer(text=f"ID: {content['SenderId']} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"ID: {content['SenderId']}")
             case "ServerRoundStarted":
                 # Normal Embed - No player info or roles
                 embed = discord.Embed(
@@ -159,99 +165,118 @@ class Webhook(commands.Cog):
                     description=f"A new round has started with {content['PlayerCount']} players.",
                     color=discord.Color.green(),
                 )
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
                 embed.set_footer(text=f"Time: {timestamp}")
 
                 # Staff Embed - Include player info and roles from Players array
                 staff_embed = discord.Embed(
                     title="Round Started (Staff)",
-                    description=f"A new round has started with {content['PlayerCount']} players. \n\n**Player Details:**\n" + "\n".join([f"**{player['PlayerName']}** ({player['PlayerId']}) as a **{player['Role']}**" for player in content['Players']]),
+                    description=f"A new round has started with {content['PlayerCount']} players.",
                     color=discord.Color.green(),
                 )
+                for player in content['Players']:
+                    staff_embed.add_field(name=player['PlayerName'], value=f"ID: {player['PlayerId']} | Role: {player['Role']}", inline=False)
+                staff_embed.add_field(name="Timestamp", value=timestamp, inline=False)
                 staff_embed.set_footer(text=f"Time: {timestamp}")
             case "ServerRoundEnded":
                 embed = discord.Embed(
                     title="Round Ended",
-                    description=f"The round has ended. \n\nWinning team: {content['WinningTeam']}. \n\nEscaped D-Class: {content['EscapedDClass']}. \n\nEscaped Scientists: {content['EscapedScientists']}. \n\nSCP Kills: {content['SCPKills']}. \n\nWarhead Detonated: {content['WarheadDetonated']}",
+                    description=f"The round has ended.",
                     color=discord.Color.red(),
                 )
-                embed.set_footer(text=f"Time: {timestamp}")
+                embed.add_field(name="Winning Team", value=content['WinningTeam'], inline=False)
+                embed.add_field(name="Escaped D-Class", value=content['EscapedDClass'], inline=False)
+                embed.add_field(name="Escaped Scientists", value=content['EscapedScientists'], inline=False)
+                embed.add_field(name="SCP Kills", value=content['SCPKills'], inline=False)
+                embed.add_field(name="Warhead Detonated", value=content['WarheadDetonated'], inline=False)
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
             case "ServerWaitingForPlayers":
                 embed = discord.Embed(
                     title="Waiting for Players",
                     description=f"The server is waiting for players to join.",
                     color=discord.Color.yellow(),
                 )
-                embed.set_footer(text=f"Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
             case "PlayerKicked":
                 embed = discord.Embed(
                     title="Player Kicked",
                     description=f"**{content['PlayerName']}** was kicked from the server by **{content['IssuerName']}** for {content['Reasoning']}.",
                     color=discord.Color.red(),
                 )
-                embed.set_footer(text=f"Player ID: {content['PlayerId']} | Staff ID: {content['IssuerId']} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"Player ID: {content['PlayerId']} | Staff ID: {content['IssuerId']}")
             case "PlayerBanned":
                 embed = discord.Embed(
                     title="Player Banned",
                     description=f"**{content['PlayerName']}** was banned from the server by **{content['IssuerName']}** for {content['Reasoning']}. Ban Duration: {content['DurationSeconds']}.",
                     color=discord.Color.dark_red(),
                 )
-                embed.set_footer(text=f"Player ID: {content['PlayerId']} | Staff ID: {content['IssuerId']} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"Player ID: {content['PlayerId']} | Staff ID: {content['IssuerId']}")
             case "PlayerBannedEx":
                 embed = discord.Embed(
                     title="Player Banned (Permanent)",
                     description=f"**{content['PlayerName']}** was permanently banned from the server by **{content['IssuerName']}** for {content['Reasoning']}. Expires: {content['ExpireDate']}.  ",
                     color=discord.Color.dark_red(),
                 )
-                embed.set_footer(text=f"Player ID: {content['PlayerId']} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"Player ID: {content['PlayerId']}")
             case "IPBanned":
                 embed = discord.Embed(
                     title="IP Banned",
                     description=f"**{content['PlayerName']}** was IP banned from the server by **{content['IssuerName']}** for {content['Reasoning']}. Expires: {content['ExpireDate']}.",
                     color=discord.Color.dark_red(),
                 )
-                embed.set_footer(text=f"Player ID: {content['PlayerId']} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"Player ID: {content['PlayerId']}")
             case "IPBanUpdated":
                 embed = discord.Embed(
                     title="IP Ban Updated",
                     description=f"**{content['PlayerName']}** had their IP ban updated by **{content['IssuerName']}** for {content['Reasoning']}. New Expire Date: {content['ExpireDate']}.",
                     color=discord.Color.orange(),
                 )
-                embed.set_footer(text=f"Player ID: {content['PlayerId']} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"Player ID: {content['PlayerId']}")
             case "PlayerBanUpdated":
                 embed = discord.Embed(
                     title="Player Ban Updated",
                     description=f"**{content['PlayerName']}** had their ban updated by **{content['IssuerName']}** for {content['Reasoning']}. New Expire Date: {content['ExpireDate']}.",
                     color=discord.Color.orange(),
                 )
-                embed.set_footer(text=f"Player ID: {content['PlayerId']} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"Player ID: {content['PlayerId']}")
             case "IPBanRevoked":
                 embed = discord.Embed(
                     title="IP Ban Revoked",
                     description=f"**{content['PlayerName']}** had their IP ban revoked by **{content['IssuerName']}** for {content['Reasoning']}.",
                     color=discord.Color.green(),
                 )
-                embed.set_footer(text=f"Player ID: {content['PlayerId']} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"Player ID: {content['PlayerId']}")
             case "PlayerBanRevoked":
                 embed = discord.Embed(
                     title="Player Ban Revoked",
                     description=f"**{content['PlayerName']}** had their ban revoked by **{content['IssuerName']}** for {content['Reasoning']}.",
                     color=discord.Color.green(),
                 )
-                embed.set_footer(text=f"Player ID: {content['PlayerId']} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"Player ID: {content['PlayerId']}")
             case "PlayerMuted":
                 embed = discord.Embed(
                     title="Player Muted",
                     description=f"**{content['PlayerName']}** was muted by **{content['IssuerName']}** for {content['Reasoning']}. Intercom Ban: {content['IsIntercom']} Expires: {content['ExpireDate']}.",
                     color=discord.Color.dark_orange(),
                 )
-                embed.set_footer(text=f"Player ID: {content['PlayerId']} | Staff ID: {content['IssuerId']} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"Player ID: {content['PlayerId']} | Staff ID: {content['IssuerId']}")
             case "PlayerUnmuted":
                 embed = discord.Embed(
                     title="Player Unmuted",
                     description=f"**{content['PlayerName']}** was unmuted by **{content['IssuerName']}** for {content['Reasoning']}.",
                     color=discord.Color.green(),
                 )
-                embed.set_footer(text=f"Player ID: {content['PlayerId']} | Staff ID: {content['IssuerId']} | Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"Player ID: {content['PlayerId']} | Staff ID: {content['IssuerId']}")
             case "heartbeat":
                 return
             case _:
@@ -260,7 +285,7 @@ class Webhook(commands.Cog):
                     description=f"Received an event of type {event_type} with content: {content}",
                     color=discord.Color.light_grey(),
                 )
-                embed.set_footer(text=f"Time: {timestamp}")
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
 
         if staff_embed:
             await self.send_to_discord(event_type, embed, has_staff_variant=True, staff_content=staff_embed)
@@ -283,10 +308,7 @@ class Webhook(commands.Cog):
                     await channel.send(embed=content)
 
     async def handle_timestamp(self, timestamp):
-        # Convert the timestamp (yyyy-MM-ddTHH:mm:ss.fffffffZ) to a discord timestamp format
-        # <t:UNIXTIMESTAMP:F> for full date and time
-        dt = datetime.datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-        return f"<t:{int(dt.timestamp())}:F>"
+        return f"<t:{int(timestamp)}:F>"
 
 async def setup(bot):
     await bot.add_cog(Webhook(bot))

@@ -1,7 +1,7 @@
 # Events and which channels they should be sent to
 event_mappings = {
-    "PlayerJoined": "normal, staff",
-    "PlayerLeft": "normal, staff",
+    "PlayerJoined": "staff",
+    "PlayerLeft": "staff",
     "PlayerDied": "staff",
     "playerKilled": "staff",
     "ServerWaveRespawned": "staff",
