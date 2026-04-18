@@ -23,6 +23,8 @@ class Webhook(commands.Cog):
         self.web_server.start()
         self.status_monitor.start()
 
+        self.round_active = False
+
     def cog_unload(self):
         self.web_server.stop()
 
@@ -101,6 +103,8 @@ class Webhook(commands.Cog):
 
         match event_type:
             case "PlayerJoined":
+                if self.round_active == False:
+                    return
                 embed = discord.Embed(
                     title="Player Joined",
                     description=f"**{content['PlayerName']}** joined the server.",
@@ -108,8 +112,10 @@ class Webhook(commands.Cog):
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
                 embed.set_footer(text=f"ID: {content['PlayerId']} | Count: {content['PlayerCount'] - 1}")
-                self.update_presence(content)
+                await self.update_presence(content)
             case "PlayerLeft":
+                if self.round_active == False:
+                    return
                 embed = discord.Embed(
                     title="Player Left",
                     description=f"**{content['PlayerName']}** left the server.",
@@ -117,7 +123,7 @@ class Webhook(commands.Cog):
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
                 embed.set_footer(text=f"ID: {content['PlayerId']} | Count: {content['PlayerCount'] - 1}")
-                self.update_presence(content)
+                await self.update_presence(content)
             case "PlayerDied":
                 embed = discord.Embed(
                     title="Player Died",
@@ -165,8 +171,6 @@ class Webhook(commands.Cog):
                     color=discord.Color.green(),
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
-                embed.set_footer(text=f"Time: {timestamp}")
-
                 # Staff Embed - Include player info and roles from Players array
                 staff_embed = discord.Embed(
                     title="Round Started (Staff)",
@@ -174,12 +178,13 @@ class Webhook(commands.Cog):
                     color=discord.Color.green(),
                 )
                 for player in content['Players']:
-                    if player['Player'] == "Dedicated Server":
+                    if player['PlayerName'] == "Dedicated Server":
                         continue
                     staff_embed.add_field(name=player['PlayerName'], value=f"ID: {player['PlayerId']}", inline=False)
                 staff_embed.add_field(name="Timestamp", value=timestamp, inline=False)
-                staff_embed.set_footer(text=f"Time: {timestamp}")
+                self.round_active = True
             case "ServerRoundEnded":
+                self.round_active = False
                 embed = discord.Embed(
                     title="Round Ended",
                     description=f"The round has ended.",
