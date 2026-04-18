@@ -122,7 +122,7 @@ class Webhook(commands.Cog):
                 embed = discord.Embed(
                     title="Player Died",
                     description=f"**{content['PlayerName']}** died. Role: {content['Role']}",
-                    color=discord.Color.grey(),
+                    color=discord.Color.purple(),
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
                 embed.set_footer(text=f"ID: {content['PlayerId']}")
@@ -137,11 +137,10 @@ class Webhook(commands.Cog):
             case "ServerWaveRespawned":
                 embed = discord.Embed(
                     title="Wave Respawned",
-                    description=f"A {content['Faction']} wave has respawned with {content['PlayersRespawned']} players.",
+                    description=f"A {content['Faction']} wave has respawned with {len(content['PlayersRespawned'])} players.",
                     color=discord.Color.blue(),
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
-                embed.set_footer(text=f"Time: {timestamp}")
             case "PlayerEscaped":
                 embed = discord.Embed(
                     title="Player Escaped",
@@ -162,7 +161,7 @@ class Webhook(commands.Cog):
                 # Normal Embed - No player info or roles
                 embed = discord.Embed(
                     title="Round Started",
-                    description=f"A new round has started with {content['PlayerCount']} players.",
+                    description=f"A new round has started with {content['PlayerCount'] - 1} players.",
                     color=discord.Color.green(),
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
@@ -171,11 +170,13 @@ class Webhook(commands.Cog):
                 # Staff Embed - Include player info and roles from Players array
                 staff_embed = discord.Embed(
                     title="Round Started (Staff)",
-                    description=f"A new round has started with {content['PlayerCount']} players.",
+                    description=f"A new round has started with {content['PlayerCount'] - 1} players.",
                     color=discord.Color.green(),
                 )
                 for player in content['Players']:
-                    staff_embed.add_field(name=player['PlayerName'], value=f"ID: {player['PlayerId']} | Role: {player['Role']}", inline=False)
+                    if player['Player'] == "Dedicated Server":
+                        continue
+                    staff_embed.add_field(name=player['PlayerName'], value=f"ID: {player['PlayerId']}", inline=False)
                 staff_embed.add_field(name="Timestamp", value=timestamp, inline=False)
                 staff_embed.set_footer(text=f"Time: {timestamp}")
             case "ServerRoundEnded":
