@@ -392,12 +392,13 @@ class Webhook(commands.Cog):
                     )
                 case _:
                     return
-
+                
+            tags_to_apply = [tag] if tag else []
             await punishment_log_channel.create_thread(
                 name=title,
                 embed=embed,
                 auto_archive_duration=1440,
-                applied_tags=[tag.id]
+                applied_tags=tags_to_apply
             )
 
     async def handle_timestamp(self, timestamp):
