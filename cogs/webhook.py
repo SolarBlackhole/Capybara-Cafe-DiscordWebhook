@@ -397,7 +397,7 @@ class Webhook(commands.Cog):
                 name=title,
                 embed=embed,
                 auto_archive_duration=1440,
-                applied_tags= [tag]
+                applied_tags=[tag.id]
             )
 
     async def handle_timestamp(self, timestamp):
