@@ -70,7 +70,15 @@ class Webhook(commands.Cog):
         count = content.get("PlayerCount", 0)
         count = count - 1
 
-        if count == 25:
+        if count > 25:
+            await self.bot.change_presence(
+                status = discord.Status.online,
+                activity = discord.Activity(
+                    type=discord.ActivityType.playing,
+                    name=f"Serving an OverCapycity Cafe with {count} Customers"
+                )
+            )
+        elif count == 25:
             await self.bot.change_presence(
                 status = discord.Status.online,
                 activity = discord.Activity(
@@ -211,6 +219,8 @@ class Webhook(commands.Cog):
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
                 embed.set_footer(text=f"Player ID: {content['PlayerId']} | Staff ID: {content['IssuerId']}")
+                if content['Reasoning'] != "AFK":
+                    await self.create_punishment_log(event_type, content, timestamp)
             case "PlayerBanned":
                 embed = discord.Embed(
                     title="Player Banned",
@@ -219,6 +229,7 @@ class Webhook(commands.Cog):
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
                 embed.set_footer(text=f"Player ID: {content['PlayerId']} | Staff ID: {content['IssuerId']}")
+                await self.create_punishment_log(event_type, content, timestamp)
             case "PlayerBannedEx":
                 embed = discord.Embed(
                     title="Player Banned (Permanent)",
@@ -227,6 +238,7 @@ class Webhook(commands.Cog):
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
                 embed.set_footer(text=f"Player ID: {content['PlayerId']}")
+                await self.create_punishment_log(event_type, content, timestamp)
             case "IPBanned":
                 embed = discord.Embed(
                     title="IP Banned",
@@ -235,6 +247,7 @@ class Webhook(commands.Cog):
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
                 embed.set_footer(text=f"Player ID: {content['PlayerId']}")
+                await self.create_punishment_log(event_type, content, timestamp)
             case "IPBanUpdated":
                 embed = discord.Embed(
                     title="IP Ban Updated",
@@ -275,6 +288,7 @@ class Webhook(commands.Cog):
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
                 embed.set_footer(text=f"Player ID: {content['PlayerId']} | Staff ID: {content['IssuerId']}")
+                await self.create_punishment_log(event_type, content, timestamp)
             case "PlayerUnmuted":
                 embed = discord.Embed(
                     title="Player Unmuted",
@@ -328,6 +342,62 @@ class Webhook(commands.Cog):
                     await channel.send(embed=staff_content)
                 else:
                     await channel.send(embed=content)
+
+    async def create_punishment_log(self, event_type, content, timestamp):
+        punishment_log_channel = self.bot.get_channel(int(self.staff_channel_id))
+        if punishment_log_channel and punishment_log_channel.type == discord.ChannelType.forum:
+            match event_type:
+                case "PlayerKicked":
+                    title = f"{content['PlayerName']} - {content['PlayerId']} - Kicked"
+                    tag = punishment_log_channel.get_tag(1492264419017752709)
+                    embed = discord.Embed(
+                        title=f"Punishment Log: Kicked",
+                        description=f"**Player:** {content['PlayerName']} (ID: {content['PlayerId']})\n**Issuer:** {content['IssuerName']} (ID: {content['IssuerId']})\n**Reason:** {content['Reasoning']}\n**Timestamp:** {timestamp}",
+                        color=discord.Color.red(),
+                    )
+                case "PlayerBanned" | "PlayerBanEx":
+                    title = f"{content['PlayerName']} - {content['PlayerId']} - Banned"
+                    if content["DurationSeconds"] >= 1576800000:
+                        duration_text = "Permanent"
+                        tag = punishment_log_channel.get_tag(1492264381558292673) 
+                    else:
+                        duration_text = f"{content['DurationSeconds']} seconds"
+                        tag = punishment_log_channel.get_tag(1492264367767552060)
+                    embed = discord.Embed(
+                        title=f"Punishment Log: Banned",
+                        description=f"**Player:** {content['PlayerName']} (ID: {content['PlayerId']})\n**Issuer:** {content['IssuerName']} (ID: {content['IssuerId']})\n**Reason:** {content['Reasoning']}\n**Duration:** {duration_text}\n**Timestamp:** {timestamp}",
+                        color=discord.Color.dark_red(),
+                    )
+                case "IPBanned":
+                    title = f"{content['PlayerName']} - {content['PlayerId']} - IP Banned"
+                    if content["DurationSeconds"] >= 1576800000:
+                        duration_text = "Permanent"
+                        tag = punishment_log_channel.get_tag(1492264353716768948) 
+                    else:
+                        duration_text = f"{content['DurationSeconds']} seconds"
+                        tag = punishment_log_channel.get_tag(1492264353716768948)
+                    embed = discord.Embed(
+                        title=f"Punishment Log: IP Banned",
+                        description=f"**Player:** {content['PlayerName']} (ID: {content['PlayerId']}) (IP: {content['PlayerIP']})\n**Issuer:** {content['IssuerName']} (ID: {content['IssuerId']})\n**Reason:** {content['Reasoning']}\n**Duration:** {duration_text}\n**Timestamp:** {timestamp}",
+                        color=discord.Color.dark_red(),
+                    )
+                case "PlayerMuted":
+                    title = f"{content['PlayerName']} - {content['PlayerId']} - Muted"
+                    tag = punishment_log_channel.get_tag(1492264353716768948)
+                    embed = discord.Embed(
+                        title=f"Punishment Log: Muted",
+                        description=f"**Player:** {content['PlayerName']} (ID: {content['PlayerId']})\n**Issuer:** {content['IssuerName']} (ID: {content['IssuerId']})\n**Reason:** {content['Reasoning']}\n**Duration:** {content['DurationSeconds']} seconds\n**Intercom Ban:** {content['IsIntercom']}\n**Timestamp:** {timestamp}",
+                        color=discord.Color.dark_orange(),
+                    )
+                case _:
+                    return
+
+            await punishment_log_channel.create_thread(
+                name=title,
+                embed=embed,
+                auto_archive_duration=1440,
+                applied_tags= tag
+            )
 
     async def handle_timestamp(self, timestamp):
         return f"<t:{int(timestamp)}:F>"
