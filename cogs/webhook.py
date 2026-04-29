@@ -16,6 +16,7 @@ class Webhook(commands.Cog):
         load_dotenv()
         self.staff_channel_id = os.getenv("STAFF_CHANNEL_ID")
         self.normal_channel_id = os.getenv("NORMAL_CHANNEL_ID")
+        self.punishment_channel_id = os.getenv("PUNISHMENT_CHANNEL_ID")
 
         self.last_heartbeat = time.time()
         self.server_offline_threshold = 40
@@ -344,7 +345,7 @@ class Webhook(commands.Cog):
                     await channel.send(embed=content)
 
     async def create_punishment_log(self, event_type, content, timestamp):
-        punishment_log_channel = self.bot.get_channel(int(self.staff_channel_id))
+        punishment_log_channel = self.bot.get_channel(int(self.punishment_channel_id))
         if punishment_log_channel and punishment_log_channel.type == discord.ChannelType.forum:
             match event_type:
                 case "PlayerKicked":
