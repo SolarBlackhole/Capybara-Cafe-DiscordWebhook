@@ -284,7 +284,7 @@ class Webhook(commands.Cog):
             case "PlayerMuted":
                 embed = discord.Embed(
                     title="Player Muted",
-                    description=f"**{content['PlayerName']}** was muted by **{content['IssuerName']}** for {content['Reasoning']}. Intercom Ban: {content['IsIntercom']} Expires: {content['ExpireDate']}.",
+                    description=f"**{content['PlayerName']}** was muted by **{content['IssuerName']}**. Intercom Ban: {content['IsIntercom']}.",
                     color=discord.Color.dark_orange(),
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
@@ -387,7 +387,7 @@ class Webhook(commands.Cog):
                     tag = punishment_log_channel.get_tag(1492264353716768948)
                     embed = discord.Embed(
                         title=f"Punishment Log: Muted",
-                        description=f"**Player:** {content['PlayerName']} (ID: {content['PlayerId']})\n**Issuer:** {content['IssuerName']} (ID: {content['IssuerId']})\n**Reason:** {content['Reasoning']}\n**Duration:** {content['DurationSeconds']} seconds\n**Intercom Ban:** {content['IsIntercom']}\n**Timestamp:** {timestamp}",
+                        description=f"**Player:** {content['PlayerName']} (ID: {content['PlayerId']})\n**Issuer:** {content['IssuerName']} (ID: {content['IssuerId']})\n**Intercom Ban:** {content['IsIntercom']}\n**Timestamp:** {timestamp}",
                         color=discord.Color.dark_orange(),
                     )
                 case _:
