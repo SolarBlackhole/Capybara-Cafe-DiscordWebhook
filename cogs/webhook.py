@@ -17,7 +17,7 @@ class Webhook(commands.Cog):
         self.staff_channel_id = os.getenv("STAFF_CHANNEL_ID")
         self.normal_channel_id = os.getenv("NORMAL_CHANNEL_ID")
         self.punishment_channel_id = os.getenv("PUNISHMENT_CHANNEL_ID")
-        slef.keep_eye_on_channel_id = os.getenv("KEEP_EYE_ON_CHANNEL_ID")
+        self.keep_eye_on_channel_id = os.getenv("KEEP_EYE_ON_CHANNEL_ID")
 
         self.last_heartbeat = time.time()
         self.server_offline_threshold = 40
