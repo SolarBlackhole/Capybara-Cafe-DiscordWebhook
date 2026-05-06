@@ -19,6 +19,6 @@ event_mappings = {
     "PlayerBanRevoked": "staff",
     "PlayerMuted": "staff",
     "PlayerUnmuted": "staff",
-    "PlayerReportedCheater": "staff",
-    "PlayerReportedPlayer": "staff"
+    "PlayerReportedCheater": "staff, keep_eye_on",
+    "PlayerReportedPlayer": "staff, keep_eye_on",
 }
