@@ -17,6 +17,7 @@ class Webhook(commands.Cog):
         self.staff_channel_id = os.getenv("STAFF_CHANNEL_ID")
         self.normal_channel_id = os.getenv("NORMAL_CHANNEL_ID")
         self.punishment_channel_id = os.getenv("PUNISHMENT_CHANNEL_ID")
+        slef.keep_eye_on_channel_id = os.getenv("KEEP_EYE_ON_CHANNEL_ID")
 
         self.last_heartbeat = time.time()
         self.server_offline_threshold = 40
@@ -343,6 +344,10 @@ class Webhook(commands.Cog):
                     await channel.send(embed=staff_content)
                 else:
                     await channel.send(embed=content)
+        if "keep_eye_on" in targets and self.keep_eye_on_channel_id:
+            channel = self.bot.get_channel(int(self.keep_eye_on_channel_id))
+            if channel:
+                await channel.send(embed=content)
 
     async def create_punishment_log(self, event_type, content, timestamp):
         punishment_log_channel = self.bot.get_channel(int(self.punishment_channel_id))
