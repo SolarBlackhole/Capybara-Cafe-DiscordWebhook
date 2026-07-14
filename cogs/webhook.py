@@ -7,12 +7,13 @@ import os
 import datetime
 import time
 from helpers.eventMappings import event_mappings
+from helpers.rateLimiter import RateLimiter
 
 
 class Webhook(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.port = 8081
+        self.port = 8500
         load_dotenv()
         self.staff_channel_id = os.getenv("STAFF_CHANNEL_ID")
         self.normal_channel_id = os.getenv("NORMAL_CHANNEL_ID")
@@ -26,6 +27,7 @@ class Webhook(commands.Cog):
         self.status_monitor.start()
 
         self.round_active = False
+        self.rate_limiter = RateLimiter(5, 5)
 
     def cog_unload(self):
         self.web_server.stop()
@@ -200,11 +202,12 @@ class Webhook(commands.Cog):
                     description=f"The round has ended.",
                     color=discord.Color.red(),
                 )
-                embed.add_field(name="Winning Team", value=content['WinningTeam'], inline=False)
-                embed.add_field(name="Escaped D-Class", value=content['EscapedDClass'], inline=False)
-                embed.add_field(name="Escaped Scientists", value=content['EscapedScientists'], inline=False)
-                embed.add_field(name="SCP Kills", value=content['SCPKills'], inline=False)
-                embed.add_field(name="Warhead Detonated", value=content['WarheadDetonated'], inline=False)
+                embed.add_field(name="Winning Team:", value=content['WinningTeam'], inline=True)
+                embed.add_field(name="Escaped D-Class:", value=content['EscapedDClass'], inline=True)
+                embed.add_field(name="Escaped Scientists:", value=content['EscapedScientists'], inline=True)
+                embed.add_field(name="SCP Kills:", value=content['SCPKills'], inline=True)
+                embed.add_field(name="SCP Alive:", value=content['SurvivingSCPs'], inline=True)
+                embed.add_field(name="Warhead Detonated:", value=content['WarheadDetonated'], inline=True)
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
             case "ServerWaitingForPlayers":
                 embed = discord.Embed(
@@ -315,7 +318,38 @@ class Webhook(commands.Cog):
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
                 embed.set_footer(text=f"Reporter ID: {content['ReporterId']} | Reported ID: {content['ReportedId']}")
-            case "heartbeat":
+            case "PlayerCuffed":
+                embed = discord.Embed(
+                    title="Player Detained",
+                    description=f"**{content['TargetName']}** was detained by **{content['PlayerName']}**",
+                    color=discord.Color.orange(),
+                )
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"Detained ID: {content['TargetId']} | Detainer ID: {content['PlayerId']}")
+            case "CommandExecuted":
+                color = discord.Color.green() if content['Success'] else discord.Color.red()
+                embed = discord.Embed(
+                    title="Command Executed",
+                    description=f"**{content['PlayerName']}** executed a command",
+                    color=color,
+                )
+                embed.add_field(
+                    name="Command",
+                    value=f"**{content['Command']['Command']}**\n{content['Command']['Description']}",
+                    inline=False
+                )
+                aliases = content['Command'].get('Aliases', [])
+                embed.add_field(name="Aliases", value=", ".join(aliases) if isinstance(aliases, list) else str(aliases), inline=True)
+                embed.add_field(name="Success", value="Yes" if content['Success'] else "No", inline=True)
+                embed.add_field(
+                    name="Arguments",
+                    value=f"`{'` `'.join(content['Arguments'])}`" if content['Arguments'] else "None",
+                    inline=False
+                )
+                embed.add_field(name="Response", value=content['Response'], inline=False)
+                embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                embed.set_footer(text=f"ID: {content['PlayerId']}")
+            case "Heartbeat":
                 return
             case _:
                 embed = discord.Embed(
@@ -324,6 +358,7 @@ class Webhook(commands.Cog):
                     color=discord.Color.light_grey(),
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
+                event_type = "Unknown"
 
         if staff_embed:
             await self.send_to_discord(event_type, embed, has_staff_variant=True, staff_content=staff_embed)
@@ -334,10 +369,12 @@ class Webhook(commands.Cog):
         channels = event_mappings.get(event_type, "")
         targets = [channel.strip() for channel in channels.split(",")]
         if "normal" in targets and self.normal_channel_id:
+            await self.rate_limiter.acquire(int(self.normal_channel_id))
             normal_channel = self.bot.get_channel(int(self.normal_channel_id))
             if normal_channel:
                 await normal_channel.send(embed=content)
         if "staff" in targets and self.staff_channel_id:
+            await self.rate_limiter.acquire(int(self.staff_channel_id))
             channel = self.bot.get_channel(int(self.staff_channel_id))
             if channel:
                 if has_staff_variant and staff_content:
@@ -345,6 +382,7 @@ class Webhook(commands.Cog):
                 else:
                     await channel.send(embed=content)
         if "keep_eye_on" in targets and self.keep_eye_on_channel_id:
+            await self.rate_limiter.acquire(int(self.keep_eye_on_channel_id))
             channel = self.bot.get_channel(int(self.keep_eye_on_channel_id))
             if channel:
                 await channel.send(embed=content)
@@ -361,7 +399,7 @@ class Webhook(commands.Cog):
                         description=f"**Player:** {content['PlayerName']} (ID: {content['PlayerId']})\n**Issuer:** {content['IssuerName']} (ID: {content['IssuerId']})\n**Reason:** {content['Reasoning']}\n**Timestamp:** {timestamp}",
                         color=discord.Color.red(),
                     )
-                case "PlayerBanned" | "PlayerBanEx":
+                case "PlayerBanned" | "PlayerBannedEx":
                     title = f"{content['PlayerName']} - {content['PlayerId']} - Banned"
                     if content["DurationSeconds"] >= 1576800000:
                         duration_text = "Permanent"
