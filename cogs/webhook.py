@@ -404,8 +404,14 @@ class Webhook(commands.Cog):
                     if content["DurationSeconds"] >= 1576800000:
                         duration_text = "Permanent"
                         tag = punishment_log_channel.get_tag(1492264381558292673) 
-                    else:
+                    elif content['ExpireDate'] is not None:
+                        duration_text = f"until {content['ExpireDate']}"
+                        tag = punishment_log_channel.get_tag(1492264367767552060)
+                    elif content["DurationSeconds"] < 1576800000:
                         duration_text = f"{content['DurationSeconds']} seconds"
+                        tag = punishment_log_channel.get_tag(1492264367767552060)
+                    else:
+                        duration_text = f"Null"
                         tag = punishment_log_channel.get_tag(1492264367767552060)
                     embed = discord.Embed(
                         title=f"Punishment Log: Banned",
@@ -414,12 +420,11 @@ class Webhook(commands.Cog):
                     )
                 case "IPBanned":
                     title = f"{content['PlayerName']} - {content['PlayerId']} - IP Banned"
-                    if content["DurationSeconds"] >= 1576800000:
-                        duration_text = "Permanent"
-                        tag = punishment_log_channel.get_tag(1492264353716768948) 
+                    if content["ExpireDate"] is not None:
+                        duration_text = f"until {content['ExpireDate']}"
                     else:
-                        duration_text = f"{content['DurationSeconds']} seconds"
-                        tag = punishment_log_channel.get_tag(1492264353716768948)
+                        duration_text = f"Null"    
+                    tag = punishment_log_channel.get_tag(1492264367767552060)
                     embed = discord.Embed(
                         title=f"Punishment Log: IP Banned",
                         description=f"**Player:** {content['PlayerName']} (ID: {content['PlayerId']}) (IP: {content['PlayerIP']})\n**Issuer:** {content['IssuerName']} (ID: {content['IssuerId']})\n**Reason:** {content['Reasoning']}\n**Duration:** {duration_text}\n**Timestamp:** {timestamp}",
