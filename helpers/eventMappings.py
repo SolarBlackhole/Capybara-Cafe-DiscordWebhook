@@ -3,7 +3,7 @@ event_mappings = {
     "PlayerJoined": "staff",
     "PlayerLeft": "staff",
     "PlayerDied": "staff",
-    "playerKilled": "staff",
+    "PlayerKilled": "staff",
     "ServerWaveRespawned": "staff",
     "PlayerEscaped": "staff",
     "AdminChatMessage": "staff",
@@ -12,6 +12,7 @@ event_mappings = {
     "ServerWaitingForPlayers": "normal, staff",
     "PlayerKicked": "staff",
     "PlayerBanned": "staff",
+    "PlayerBannedEx": "staff",
     "IPBanned": "staff",
     "IPBanUpdated": "staff",
     "PlayerBanUpdated": "staff",
@@ -21,4 +22,5 @@ event_mappings = {
     "PlayerUnmuted": "staff",
     "PlayerReportedCheater": "staff, keep_eye_on",
     "PlayerReportedPlayer": "staff, keep_eye_on",
+    "Unknown": "staff",
 }
