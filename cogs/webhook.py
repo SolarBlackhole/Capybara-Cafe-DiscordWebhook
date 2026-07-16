@@ -139,7 +139,7 @@ class Webhook(commands.Cog):
             case "PlayerDied":
                 embed = discord.Embed(
                     title="Player Died",
-                    description=f"**{content['PlayerName']}** died. Role: {content['Role']}",
+                    description=f"**{content['PlayerName']}** died by {content['DamageType']}. Role: {content['Role']}",
                     color=discord.Color.purple(),
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
@@ -147,7 +147,7 @@ class Webhook(commands.Cog):
             case "PlayerKilled":
                 embed = discord.Embed(
                     title="Player Killed",
-                    description=f"**{content['AttackerName']}** as a **{content['AttackerRole']}** killed **{content['VictimName']}** who was a **{content['VictimRole']}**.",
+                    description=f"**{content['AttackerName']}** as a **{content['AttackerRole']}** killed **{content['VictimName']}** who was a **{content['VictimRole']}** with **{content['DamageType']}**.",
                     color=discord.Color.dark_red(),
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
