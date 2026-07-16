@@ -13,7 +13,7 @@ from helpers.rateLimiter import RateLimiter
 class Webhook(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.port = 8500
+        self.port = 8081
         load_dotenv()
         self.staff_channel_id = os.getenv("STAFF_CHANNEL_ID")
         self.normal_channel_id = os.getenv("NORMAL_CHANNEL_ID")
