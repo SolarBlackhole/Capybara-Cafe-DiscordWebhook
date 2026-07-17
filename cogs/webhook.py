@@ -227,7 +227,6 @@ class Webhook(commands.Cog):
                 if content['Reasoning'] != "AFK":
                     await self.create_punishment_log(event_type, content, timestamp)
             case "PlayerBanned":
-                print(f"PlayerBanned event received: {content}")
                 embed = discord.Embed(
                     title="Player Banned",
                     description=f"**{content['PlayerName']}** was banned from the server by **{content['IssuerName']}** for {content['Reasoning']}. Ban Duration: {content['DurationSeconds']}.",
@@ -237,7 +236,6 @@ class Webhook(commands.Cog):
                 embed.set_footer(text=f"Player ID: {content['PlayerId']} | Staff ID: {content['IssuerId']}")
                 await self.create_punishment_log(event_type, content, timestamp)
             case "PlayerBannedEx":
-                print(f"PlayerBannedEx event received: {content}")
                 embed = discord.Embed(
                     title="Player Banned (Permanent)",
                     description=f"**{content['PlayerName']}** was permanently banned from the server by **{content['IssuerName']}** for {content['Reasoning']}. Expires: {content['ExpireDate']}.  ",
@@ -401,7 +399,7 @@ class Webhook(commands.Cog):
                         description=f"**Player:** {content['PlayerName']} (ID: {content['PlayerId']})\n**Issuer:** {content['IssuerName']} (ID: {content['IssuerId']})\n**Reason:** {content['Reasoning']}\n**Timestamp:** {timestamp}",
                         color=discord.Color.red(),
                     )
-                case "PlayerBanned" | "PlayerBannedEx":
+                case "PlayerBanned":
                     title = f"{content['PlayerName']} - {content['PlayerId']} - Banned"
                     if content["DurationSeconds"] >= 1576800000:
                         duration_text = "Permanent"
