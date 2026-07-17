@@ -422,7 +422,7 @@ class Webhook(commands.Cog):
                         tag = punishment_log_channel.get_tag(1492264367767552060)
                     embed = discord.Embed(
                         title=f"Punishment Log: Banned (Extended)",
-                        description=f"**Player:** {content['PlayerName']} (ID: {content['PlayerId']})\n**Issuer:** {content['IssuerName']} (ID: {content['IssuerId']})\n**Reason:** {content['Reasoning']}\n**Duration:** {duration_text}\n**Timestamp:** {timestamp}",
+                        description=f"**Player:** {content['PlayerName']} (ID: {content['PlayerId']})\n**Issuer:** {content['IssuerName']}\n**Reason:** {content['Reasoning']}\n**Duration:** {duration_text}\n**Timestamp:** {timestamp}",
                         color=discord.Color.dark_red(),
                     )
                 case "IPBanned":
