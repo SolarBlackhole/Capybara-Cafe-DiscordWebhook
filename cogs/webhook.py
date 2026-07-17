@@ -192,7 +192,7 @@ class Webhook(commands.Cog):
                 for player in content['Players']:
                     if player['PlayerName'] == "Dedicated Server":
                         continue
-                    staff_embed.add_field(name=player['PlayerName'], value=f"Role: {player['Role']} | ID: {player['PlayerId']}", inline=False)
+                    staff_embed.add_field(name=player['PlayerName'], value=f"ID: {player['PlayerId']}", inline=False)
                 staff_embed.add_field(name="Timestamp", value=timestamp, inline=False)
                 self.round_active = True
             case "ServerRoundEnded":
