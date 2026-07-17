@@ -13,7 +13,7 @@ from helpers.rateLimiter import RateLimiter
 class Webhook(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.port = 8081
+        self.port = os.getenv("WEBHOOK_PORT", 8081)
         load_dotenv()
         self.staff_channel_id = os.getenv("STAFF_CHANNEL_ID")
         self.normal_channel_id = os.getenv("NORMAL_CHANNEL_ID")
@@ -139,7 +139,7 @@ class Webhook(commands.Cog):
             case "PlayerDied":
                 embed = discord.Embed(
                     title="Player Died",
-                    description=f"**{content['PlayerName']}** died by {content['DamageType']}. Role: {content['Role']}",
+                    description=f"**{content['PlayerName']}** died by {content['DamageType']} Role: {content['Role']}",
                     color=discord.Color.purple(),
                 )
                 embed.add_field(name="Timestamp", value=timestamp, inline=False)
@@ -404,17 +404,24 @@ class Webhook(commands.Cog):
                     if content["DurationSeconds"] >= 1576800000:
                         duration_text = "Permanent"
                         tag = punishment_log_channel.get_tag(1492264381558292673) 
-                    elif content['ExpireDate'] is not None:
-                        duration_text = f"until {content['ExpireDate']}"
-                        tag = punishment_log_channel.get_tag(1492264367767552060)
-                    elif content["DurationSeconds"] < 1576800000:
+                    else:
                         duration_text = f"{content['DurationSeconds']} seconds"
+                        tag = punishment_log_channel.get_tag(1492264367767552060)
+                    embed = discord.Embed(
+                        title=f"Punishment Log: Banned",
+                        description=f"**Player:** {content['PlayerName']} (ID: {content['PlayerId']})\n**Issuer:** {content['IssuerName']} (ID: {content['IssuerId']})\n**Reason:** {content['Reasoning']}\n**Duration:** {duration_text}\n**Timestamp:** {timestamp}",
+                        color=discord.Color.dark_red(),
+                    )
+                case "PlayerBannedEx":
+                    title = f"{content['PlayerName']} - {content['PlayerId']} - Banned (Extended)"
+                    if content['ExpireDate'] is not None:
+                        duration_text = f"until {content['ExpireDate']}"
                         tag = punishment_log_channel.get_tag(1492264367767552060)
                     else:
                         duration_text = f"Null"
                         tag = punishment_log_channel.get_tag(1492264367767552060)
                     embed = discord.Embed(
-                        title=f"Punishment Log: Banned",
+                        title=f"Punishment Log: Banned (Extended)",
                         description=f"**Player:** {content['PlayerName']} (ID: {content['PlayerId']})\n**Issuer:** {content['IssuerName']} (ID: {content['IssuerId']})\n**Reason:** {content['Reasoning']}\n**Duration:** {duration_text}\n**Timestamp:** {timestamp}",
                         color=discord.Color.dark_red(),
                     )
